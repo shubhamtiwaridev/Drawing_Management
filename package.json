@@ -1,0 +1,111 @@
+{
+  "name": "drawing-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Electron installer build for the Drawing Management desktop app",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "postinstall": "npm run install:all",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently -k -n BACKEND,FRONTEND \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "npm --prefix frontend run build",
+    "pack": "npm run build:frontend && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --dir",
+    "dist": "npm run dist:setup",
+    "dev:electron": "concurrently -k -n BACKEND,FRONTEND,ELECTRON \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on http://localhost:5173 && cross-env ELECTRON_START_URL=http://localhost:5173 electron .\"",
+    "build:web": "npm run build:frontend",
+    "start:web": "npm run build:frontend && cross-env NODE_ENV=production SERVE_FRONTEND=true npm --prefix backend run start",
+    "start:web:no-build": "cross-env NODE_ENV=production SERVE_FRONTEND=true npm --prefix backend run start",
+    "dist:win": "npm run dist",
+    "dist:portable": "npm run clean:release && npm run build:frontend && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win portable",
+    "dist:all": "npm run clean:release && npm run build:frontend && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis portable",
+    "clean:release": "node scripts/clean-release.cjs",
+    "dist:setup": "npm run clean:release && npm run build:frontend && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "cross-env": "^7.0.3",
+    "electron": "^32.0.0",
+    "electron-builder": "^25.1.8",
+    "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.drawing.management",
+    "productName": "Drawing Management",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build",
+        "to": "build",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "backend",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "frontend/dist",
+        "to": "frontend/dist",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Drawing Management",
+      "runAfterFinish": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "artifactName": "${productName} Setup ${version}.${ext}"
+    },
+    "asar": true,
+    "compression": "normal",
+    "portable": {
+      "artifactName": "${productName} Portable ${version}.${ext}"
+    },
+    "npmRebuild": false,
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://your-domain.com/updates/"
+      }
+    ]
+  },
+  "author": "Decostyle",
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  }
+}

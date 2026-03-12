@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-sidebar: #ffffff;
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --hover-bg: #f7fafc;
+  --header-bg: rgba(255, 255, 255, 0.95);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --input-bg: #ffffff;
+  --button-hover: #f1f5f9;
+}
+
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-sidebar: #111827;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --border-color: #334155;
+  --card-bg: #1e293b;
+  --hover-bg: #2d3748;
+  --header-bg: rgba(15, 23, 42, 0.95);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --input-bg: #334155;
+  --button-hover: #374151;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+header {
+  background-color: var(--header-bg) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+aside {
+  background-color: var(--bg-sidebar) !important;
+}
+
+.dark .bg-slate-50\/80 {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.dark .scrollbar-track-slate-200 {
+  --scrollbar-track: #1e293b !important;
+}
+
+.dark .scrollbar-thumb-green-500 {
+  --scrollbar-thumb: #10b981 !important;
+}
+
+.bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+.bg-slate-50 {
+  background-color: var(--hover-bg) !important;
+}
+
+.bg-gray-50 {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark .bg-\[\#f0f7eb\] {
+  background-color: #e2e8f0 !important; 
+  border-color: #cbd5e1 !important;
+}
+
+.dark .bg-\[\#f0f7eb\]:hover {
+  background-color: #cbd5e1 !important; 
+  border-color: #94a3b8 !important;
+}
+
+.dark .hover\:border-green-300:hover {
+  border-color: #10b981 !important;
+}
+
+.font-semibold.truncate {
+  color: #1a202c !important;
+}
+
+
+.dark .font-semibold.truncate {
+  color: #1a202c !important; 
+}
+
+.dark .sticky.top-4 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .sticky.top-4 h1 {
+  color: #f1f5f9 !important;
+}
+
+.border,
+.border-b,
+.border-t,
+.border-l,
+.border-r {
+  border-color: var(--border-color) !important;
+}
+
+.text-slate-900,
+.text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.text-slate-700,
+.text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+.text-slate-500,
+.text-gray-500 {
+  color: var(--text-secondary) !important;
+  opacity: 0.8;
+}
+
+input,
+select,
+textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+button.bg-gray-100,
+button.bg-slate-100 {
+  background-color: var(--hover-bg) !important;
+}
+
+button.bg-white.border.rounded-md.bg-white,
+button.px-5.py-2.border.rounded-md.bg-white,
+button.px-4.py-2.bg-gray-200,
+button.bg-gray-200 {
+  background-color: #ef4444 !important;
+  color: white !important;
+  border-color: #dc2626 !important;
+}
+
+button.bg-white.border.rounded-md.bg-white:hover,
+button.px-5.py-2.border.rounded-md.bg-white:hover,
+button.px-4.py-2.bg-gray-200:hover,
+button.bg-gray-200:hover {
+  background-color: #dc2626 !important;
+}
+
+.shadow,
+.shadow-sm,
+.shadow-md {
+  box-shadow: 0 1px 3px var(--shadow-color) !important;
+}
+
+.dark .bg-green-50 {
+  background-color: rgba(21, 128, 61, 0.2) !important;
+}
+
+.dark .bg-yellow-100 {
+  background-color: rgba(161, 98, 7, 0.2) !important;
+}
+
+.dark .bg-red-100 {
+  background-color: rgba(185, 28, 28, 0.2) !important;
+}
+
+.dark .bg-emerald-500 {
+  background-color: #10b981 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.dark .bg-white.rounded-lg.border {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .hover\:bg-white:hover {
+  background-color: #2d3748 !important;
+}
+
+.dark .bg-green-100 {
+  background-color: rgba(21, 128, 61, 0.3) !important;
+  color: #d1fae5 !important;
+}
+
+.dark .text-green-900 {
+  color: #d1fae5 !important;
+}
+
+
+.dark .bg-white.rounded-lg.border.p-5.shadow-sm {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-white.rounded-lg.border.p-5.shadow-sm .font-semibold {
+  color: #1a202c !important; 
+}
