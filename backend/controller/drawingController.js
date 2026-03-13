@@ -23,6 +23,21 @@ const EXTENSION_MAP = {
   saw: "sawFile",
 };
 
+const BROWSER_INLINE_EXTENSIONS = new Set([
+  ".pdf",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".txt",
+  ".csv",
+  ".json",
+  ".htm",
+  ".html",
+]);
+
 const normalizeToArray = (value) =>
   Array.isArray(value) ? value : value ? [value] : [];
 
@@ -243,6 +258,20 @@ export const openFile = async (req, res) => {
       return res.status(404).send("Drawing not found");
     }
 
+    const allowedDepartments = Array.isArray(req.user?.departments)
+      ? req.user.departments.map(String)
+      : req.user?.department
+        ? [String(req.user.department)]
+        : [];
+
+    const canOpen =
+      req.user?.role !== "user" ||
+      (drawing.active && allowedDepartments.includes(String(drawing.folderName)));
+
+    if (!canOpen) {
+      return res.status(403).send("Access denied");
+    }
+
     let foundFile = null;
 
     if (drawing.files instanceof Map) {
@@ -278,6 +307,12 @@ export const openFile = async (req, res) => {
     const absPath = resolveStoredFilePath(foundFile.filePath);
 
     if (!fs.existsSync(absPath)) {
+      console.warn("OPEN FILE MISSING", {
+        drawingId: drawing._id.toString(),
+        userId: req.user?.id,
+        storedPath: foundFile.filePath,
+        resolvedPath: absPath,
+      });
       return res.status(404).send("File missing on server");
     }
 
@@ -293,13 +328,16 @@ export const openFile = async (req, res) => {
       },
     });
 
-    const extWithDot =
+    const extWithDot = (
       path.extname(foundFile.fileName || "") ||
-      path.extname(foundFile.filePath || "");
+      path.extname(foundFile.filePath || "")
+    ).toLowerCase();
 
     const downloadName = `${drawing.fullDrawingNo}${extWithDot}`;
+    const forceDownload = String(download || "") === "1";
+    const canOpenInlineInBrowser = BROWSER_INLINE_EXTENSIONS.has(extWithDot);
 
-    if (String(download || "") === "1") {
+    if (forceDownload || !canOpenInlineInBrowser) {
       return res.download(absPath, downloadName);
     }
 

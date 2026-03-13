@@ -1,9 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-/* ================================
-   FETCH BY PARENT
-================================ */
 export const fetchSubDepartmentsByParent = createAsyncThunk(
   "subDepartments/fetchByParent",
   async (parentId) => {
@@ -14,9 +11,6 @@ export const fetchSubDepartmentsByParent = createAsyncThunk(
   }
 );
 
-/* ================================
-   CREATE
-================================ */
 export const createSubDepartment = createAsyncThunk(
   "subDepartments/create",
   async ({ name, parentId, parentName }) => {
@@ -33,9 +27,6 @@ export const createSubDepartment = createAsyncThunk(
   }
 );
 
-/* ================================
-   UPDATE
-================================ */
 export const updateSubDepartment = createAsyncThunk(
   "subDepartments/update",
   async ({ parentId, subId, name }) => {
@@ -48,9 +39,6 @@ export const updateSubDepartment = createAsyncThunk(
   }
 );
 
-/* ================================
-   DELETE
-================================ */
 export const deleteSubDepartment = createAsyncThunk(
   "subDepartments/delete",
   async ({ parentId, subId }) => {

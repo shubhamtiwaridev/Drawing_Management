@@ -335,7 +335,6 @@ const drawingSlice = createSlice({
           return Number.isFinite(t) ? t : -Infinity;
         };
 
-        // ✅ newest first (first come first serve in display)
         state.rows = action.payload
           .map(normalizeDrawingFiles)
           .sort((a, b) => ts(b) - ts(a));

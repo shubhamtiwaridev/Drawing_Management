@@ -162,9 +162,6 @@ export const login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       sameSite: "lax",
-      // In Electron desktop mode we typically run on http://127.0.0.1, so a
-      // secure cookie would not be set. Keep secure cookies for real production
-      // (HTTPS) deployments.
       secure:
         process.env.NODE_ENV === "production" && process.env.ELECTRON !== "true",
       maxAge: TOKEN_EXPIRY_SECONDS * 1000,

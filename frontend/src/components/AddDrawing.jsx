@@ -198,8 +198,6 @@ export default function DrawingManager({
     return [];
   }, [role, departments, assignedDepartmentIds]);
 
-  // ✅ If deptId is passed (ProductDepartment dept card flow),
-  // lock dropdown options to only that selected department.
   const lockedDept = useMemo(() => {
     if (!deptId) return null;
 
@@ -209,7 +207,6 @@ export default function DrawingManager({
     );
   }, [deptId, allowedDepartments]);
 
-  // ✅ Use single dept if locked, otherwise normal list
   const deptOptions = lockedDept ? [lockedDept] : allowedDepartments;
 
   useEffect(() => {
@@ -435,7 +432,6 @@ export default function DrawingManager({
         Array.isArray(arr) && arr.some((item) => item?.file instanceof File),
     );
 
-    // ✅ Only block when creating new drawing
     if (editingId == null && !hasNewFile) {
       setFileError("Please select at least one file before saving.");
       return;
@@ -913,7 +909,6 @@ export default function DrawingManager({
                             ),
                           );
 
-                          // 9 file columns (preserved)
                           cells.push(
                             renderFileCell(r.files?.pdfFile, "pdf", false),
                           );

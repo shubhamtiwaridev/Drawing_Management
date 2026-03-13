@@ -5,13 +5,11 @@ const PROJECT_ROOT = process.env.PROJECT_ROOT
   ? path.resolve(process.env.PROJECT_ROOT)
   : path.resolve(process.cwd(), "..");
 
-const SYSTEM_ROOT = process.env.SYSTEM_ROOT
-  ? path.resolve(process.env.SYSTEM_ROOT)
-  : path.join(PROJECT_ROOT, "File_Management_System");
-
 const FILE_ROOT = process.env.FILE_ROOT
   ? path.resolve(process.env.FILE_ROOT)
-  : path.join(SYSTEM_ROOT, "Drawing_Files");
+  : path.join(PROJECT_ROOT, "Drawing_Files");
+
+const SYSTEM_ROOT = path.dirname(FILE_ROOT);
 
 fs.mkdirSync(FILE_ROOT, { recursive: true });
 
@@ -36,14 +34,16 @@ export const ensureDepartmentDir = (folderName = "general") => {
 };
 
 export const toStoredFilePath = (folderSlug, fileName) =>
-  `/File_Management_System/Drawing_Files/${slugifyFolderName(folderSlug)}/${safeName(fileName)}`;
+  `/${slugifyFolderName(folderSlug)}/${safeName(fileName)}`;
 
 export const resolveStoredFilePath = (storedPath = "") => {
   const normalized = String(storedPath)
-    .replace(/^[/\\]+/, "")
-    .replace(/^File_Management_System[/\\]+/, "");
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "")
+    .replace(/^File_Management_System\/Drawing_Files\//i, "")
+    .replace(/^Drawing_Files\//i, "");
 
-  const absPath = path.resolve(SYSTEM_ROOT, normalized);
+  const absPath = path.resolve(FILE_ROOT, normalized);
   const root = path.resolve(FILE_ROOT);
   const safePrefix = `${root}${path.sep}`;
 

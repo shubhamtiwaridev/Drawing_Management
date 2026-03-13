@@ -60,9 +60,9 @@ const sidebarSlice = createSlice({
   reducers: {
     toggleDarkMode: (state) => {
       state.darkMode = !state.darkMode;
-      // Update localStorage
+
       localStorage.setItem("dark", state.darkMode ? "true" : "false");
-      // Dispatch event for other components
+      
       window.dispatchEvent(new CustomEvent("theme-change", { detail: state.darkMode }));
     },
     setDarkMode: (state, action) => {

@@ -2,7 +2,6 @@ function to24h(hour12, meridiem) {
   let h = Number(hour12);
   if (!Number.isFinite(h)) return null;
 
-  // ✅ FIX: hour must be 1..12 (not 0 or 13 etc.)
   if (h < 1 || h > 12) return null;
 
   h = h % 12;

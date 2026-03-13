@@ -522,7 +522,6 @@ export default function Dashboard({
               </Panel>
             )}
 
-            {/* ✅ Overall: only superadmin (kept your logic) */}
             {isSuperAdmin && (
               <Panel title="Overall Activity Summary">
                 <div className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-4">

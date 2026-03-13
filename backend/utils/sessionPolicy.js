@@ -33,7 +33,6 @@ export async function applyLoginPolicy({ userId, jwtExpiresAt }) {
     };
   }
 
-  // ✅ FIXED: LOGOUT_ONLY should ALLOW login, but force logout at logoutAt (if future)
   if (schedule.mode === "LOGOUT_ONLY") {
     if (!schedule.logoutAt) {
       return {
@@ -42,7 +41,6 @@ export async function applyLoginPolicy({ userId, jwtExpiresAt }) {
       };
     }
 
-    // If logout time already passed -> disable schedule and allow normal login
     if (now.getTime() >= schedule.logoutAt.getTime()) {
       schedule.isActive = false;
       await schedule.save();
@@ -124,7 +122,6 @@ export async function applyLoginPolicy({ userId, jwtExpiresAt }) {
       };
     }
 
-    // ✅ FIX: use >= so at exact logout time, login not allowed
     if (now.getTime() >= schedule.logoutAt.getTime()) {
       return {
         ok: false,
@@ -158,7 +155,6 @@ export async function applyLoginPolicy({ userId, jwtExpiresAt }) {
       };
     }
 
-    // ✅ FIX: use >= for end boundary
     if (
       now.getTime() < schedule.windowStart.getTime() ||
       now.getTime() >= schedule.windowEnd.getTime()

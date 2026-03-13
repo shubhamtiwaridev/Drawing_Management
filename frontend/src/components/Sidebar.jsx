@@ -54,8 +54,8 @@ export default function Sidebar({
     currentUser.departments.length > 0
       ? currentUser.departments
       : currentUser?.department
-      ? [currentUser.department]
-      : [];
+        ? [currentUser.department]
+        : [];
 
   // Theme change listener
   useEffect(() => {
@@ -153,7 +153,7 @@ export default function Sidebar({
   const mergedDepartments = Array.from(mergedMap.values());
 
   const normalizedUserDepartments = userDepartments.map((d) =>
-    (d || "").toString().toUpperCase()
+    (d || "").toString().toUpperCase(),
   );
 
   const visibleDepartments = isSuperAdmin
@@ -180,7 +180,7 @@ export default function Sidebar({
 
   return (
     <div className={dark ? "bg-slate-900 text-white" : "bg-white text-black"}>
-      <aside className="fixed top-[105px] left-3 bottom-3 w-70 z-30">
+      <aside className="fixed top-28 left-3 bottom-3 w-70 z-30">
         <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg flex flex-col h-full">
           <nav className="px-4 pt-4 pb-4 space-y-4">
             <button
@@ -201,10 +201,7 @@ export default function Sidebar({
             {prodExpanded && (
               <div
                 className="pl-2 pr-2 pt-2 pb-2 space-y-2 rounded-lg dark:bg-slate-800/60
-                           max-h-[330px] overflow-y-auto
-                           scrollbar-thin
-scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700
-scrollbar-track-transparent"
+                           max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent"
               >
                 {visibleDepartments.map((dept) => (
                   <div

@@ -34,7 +34,6 @@ export const calculateSessionExpiry = async (user, loginTime) => {
   if (policy.cutoffTime) {
     const [hh, mm] = policy.cutoffTime.split(":").map(Number);
 
-    // ✅ small safety: only if valid numbers
     if (Number.isFinite(hh) && Number.isFinite(mm)) {
       const cutoff = new Date(base);
       cutoff.setHours(hh, mm, 0, 0);
@@ -44,7 +43,6 @@ export const calculateSessionExpiry = async (user, loginTime) => {
     }
   }
 
-  // ✅ FIX: avoid Infinity if no rules found
   if (expiries.length === 0) {
     return base.getTime() + DEFAULT_MS;
   }

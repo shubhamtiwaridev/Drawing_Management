@@ -7,7 +7,11 @@ import logo from "./logos/image.png";
 import * as XLSX from "xlsx";
 import { FaTrashAlt } from "react-icons/fa";
 
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "";
 
 const formatDateTime = (date) => {
   if (!date) return "—";
@@ -100,53 +104,44 @@ const formatAction = (action) => {
       return "Login";
     case "LOGOUT":
       return "Logout";
-
     case "CREATE_DRAWING":
       return "Created Drawing";
     case "UPDATE_DRAWING":
       return "Updated Drawing";
     case "DELETE_DRAWING":
       return "Deleted Drawing";
-
     case "CREATE_DEPARTMENT":
       return "Created Department";
     case "UPDATE_DEPARTMENT":
       return "Updated Department";
     case "DELETE_DEPARTMENT":
       return "Deleted Department";
-
     case "CREATE_USER":
       return "Created User";
     case "UPDATE_USER":
       return "Updated User";
     case "DELETE_USER":
       return "Deleted User";
-
-    // ✅ ADDED (Enable / Disable user logs)
     case "ENABLE_USER":
       return "Enabled User";
     case "DISABLE_USER":
       return "Disabled User";
-
     case "ACTIVATE_DRAWING":
       return "Activated Drawing";
     case "DEACTIVATE_DRAWING":
       return "Deactivated Drawing";
-
     case "SEARCH":
       return "Search";
     case "OPEN":
       return "Opened File";
     case "DOWNLOAD":
       return "Downloaded File";
-
     case "SCHEDULE_UPSERT":
       return "Schedule Saved";
     case "SCHEDULE_CLEANUP":
       return "Schedule Cleared";
     case "SESSION_CHECK":
       return "Session Checked";
-
     default:
       return action;
   }

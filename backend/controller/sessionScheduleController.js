@@ -103,7 +103,6 @@ export async function upsertSchedule(req, res) {
       isActive: true,
     });
 
-    // ✅ Apply schedule immediately to current active session (if exists)
     const active = await UserActiveSession.findOne({
       userId,
       isActive: true,
