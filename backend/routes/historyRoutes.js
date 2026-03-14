@@ -6,16 +6,12 @@ import {getDrawingHistory,getAllHistory,deleteHistoryEvent,} from "../controller
 const router = express.Router();
 
 router.get("/:drawingId", requireAuth, getDrawingHistory);
-
 router.get("/", requireAuth, requireAdmin, getAllHistory);
-
 router.delete(
   "/event/:eventId",
   requireAuth,
   requireAdmin,
   deleteHistoryEvent
 );
-
-
 
 export default router;

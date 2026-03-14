@@ -7,22 +7,24 @@ export const getCounter = async (req, res) => {
   try {
     const { departmentId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(departmentId)) {
-      return res.status(400).json({ success: false, message: "Invalid department id" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid department id" });
     }
-
     let counter = await DepartmentCounter.findOne({ departmentId }).lean();
-
     if (!counter) {
       const dep = await Department.findById(departmentId).lean();
       if (!dep) {
-        return res.status(404).json({ success: false, message: "Department not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Department not found" });
       }
-
       counter = await DepartmentCounter.create({
         departmentId: dep._id,
         departmentName: dep.name,
         shortCode: dep.shortCode,
-        lastNumberUsed: typeof dep.lastNumberUsed === "number" ? dep.lastNumberUsed : 0,
+        lastNumberUsed:
+          typeof dep.lastNumberUsed === "number" ? dep.lastNumberUsed : 0,
       });
 
       counter = counter.toObject();
@@ -47,23 +49,24 @@ export const getNextNumber = async (req, res) => {
   try {
     const { departmentId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(departmentId)) {
-      return res.status(400).json({ success: false, message: "Invalid department id" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid department id" });
     }
-
     const dep = await Department.findById(departmentId).lean();
     if (!dep) {
-      return res.status(404).json({ success: false, message: "Department not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Department not found" });
     }
-
     const updated = await DepartmentCounter.findOneAndUpdate(
       { departmentId },
       {
         $setOnInsert: { departmentName: dep.name, shortCode: dep.shortCode },
         $inc: { lastNumberUsed: 1 },
       },
-      { new: true, upsert: true, setDefaultsOnInsert: true, lean: true }
+      { new: true, upsert: true, setDefaultsOnInsert: true, lean: true },
     );
-
     const nextNumber = updated.lastNumberUsed || 0;
 
     return res.json({
@@ -84,22 +87,35 @@ export const getNextNumber = async (req, res) => {
 export const backfillCounters = async (req, res) => {
   try {
     if (String(process.env.DEPT_COUNTER_BACKFILL) !== "1") {
-      return res.status(403).json({ success: false, message: "Backfill disabled" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Backfill disabled" });
     }
     const Drawing = (await import("../models/drawingModel.js")).default;
-
     const departments = await Department.find({}).lean();
     const results = [];
 
     for (const dep of departments) {
-      const folderSlug = (dep.name || "").toLowerCase().trim().replace(/\s+/g, "_");
+      const folderSlug = (dep.name || "")
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "_");
       const short = dep.shortCode || "";
 
       const q = {
         $or: [
           { folderSlug },
           { shortcut: dep.shortCode || "" },
-          ...(short ? [{ fullDrawingNo: { $regex: `^${short}[-_]?\\d+`, $options: "i" } }] : []),
+          ...(short
+            ? [
+                {
+                  fullDrawingNo: {
+                    $regex: `^${short}[-_]?\\d+`,
+                    $options: "i",
+                  },
+                },
+              ]
+            : []),
         ],
       };
 
@@ -121,12 +137,21 @@ export const backfillCounters = async (req, res) => {
       if (maxNum > 0) {
         await DepartmentCounter.findOneAndUpdate(
           { departmentId: dep._id },
-          { $set: { departmentName: dep.name, shortCode: dep.shortCode, lastNumberUsed: maxNum } },
-          { upsert: true }
+          {
+            $set: {
+              departmentName: dep.name,
+              shortCode: dep.shortCode,
+              lastNumberUsed: maxNum,
+            },
+          },
+          { upsert: true },
         );
       }
-
-      results.push({ departmentId: dep._id.toString(), deptName: dep.name, foundMax: maxNum });
+      results.push({
+        departmentId: dep._id.toString(),
+        deptName: dep.name,
+        foundMax: maxNum,
+      });
     }
 
     return res.json({ success: true, results });
@@ -135,5 +160,4 @@ export const backfillCounters = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 export default { getCounter, getNextNumber, backfillCounters };

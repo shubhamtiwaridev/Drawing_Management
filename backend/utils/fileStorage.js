@@ -22,7 +22,6 @@ export const safeName = (value = "") =>
 
 export const slugifyFolderName = (value = "") =>
   safeName(value).toLowerCase();
-
 export const getSystemRoot = () => SYSTEM_ROOT;
 export const getFileRoot = () => FILE_ROOT;
 

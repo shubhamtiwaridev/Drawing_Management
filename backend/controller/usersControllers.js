@@ -32,7 +32,6 @@ export const listUsers = async (req, res) => {
     }
 
     const users = await userModel.find(filter).sort({ createdAt: -1 }).lean();
-
     const safe = users.map((u) => {
       const departments = normalizeDepartments(u);
       return {
@@ -48,7 +47,6 @@ export const listUsers = async (req, res) => {
         createdAt: u.createdAt,
       };
     });
-
     res.json(safe);
   } catch (err) {
     console.error("listUsers error", err);
@@ -62,7 +60,6 @@ export const getUser = async (req, res) => {
     if (!u || u.deleted) {
       return res.status(404).json({ success: false, message: "Not found" });
     }
-
     const departments = normalizeDepartments(u);
 
     res.json({
@@ -90,14 +87,13 @@ export const getMe = async (req, res) => {
         .status(401)
         .json({ success: false, message: "Not authenticated" });
     }
-
     const u = await userModel.findById(req.user.id).lean();
     if (!u || u.deleted) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-
+    
     const departments = normalizeDepartments(u);
 
     return res.json({

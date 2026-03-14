@@ -8,7 +8,6 @@ export default function requireAdmin(req, res, next) {
   }
 
   const role = (req.user.role || "").toLowerCase();
-
   if (!["superadmin", "admin", "subadmin"].includes(role)) {
     return res.status(403).json({
       success: false,

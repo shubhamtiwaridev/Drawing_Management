@@ -19,7 +19,6 @@ function validateFuture(dateObj, label) {
   if (!assertNotPastMonth(dateObj)) {
     return `${label} month cannot be before current month`;
   }
-
   return null;
 }
 
@@ -36,7 +35,6 @@ export async function upsertSchedule(req, res) {
     if (!userId || !mode) {
       return res.status(400).json({ message: "userId and mode are required" });
     }
-
     let loginAt = null;
     let logoutAt = null;
     let ws = null;
@@ -47,7 +45,6 @@ export async function upsertSchedule(req, res) {
       const err = validateFuture(loginAt, "Login");
       if (err) return res.status(400).json({ message: err });
     }
-
     if (mode === "LOGIN_LOGOUT") {
       loginAt = parseUiDateTime(login);
       logoutAt = parseUiDateTime(logout);

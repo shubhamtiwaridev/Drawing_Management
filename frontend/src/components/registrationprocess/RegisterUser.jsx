@@ -14,7 +14,6 @@ import {
   setDeptSearch,
   registerUser,
 } from "../../store/userRegistrationSlice";
-
 import { FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 const BASE_DEPARTMENTS = [];
@@ -60,14 +59,12 @@ function CardHeader({ title, subtitle }) {
 
 function StatusMessage({ message, type }) {
   if (!message) return null;
-
   const styles =
     type === "success"
       ? "bg-emerald-100 text-emerald-900 border-emerald-200"
       : type === "error"
         ? "bg-rose-100 text-rose-900 border-rose-200"
         : "bg-slate-100 text-slate-700 border-slate-200";
-
   return (
     <div
       aria-live="polite"
@@ -147,7 +144,6 @@ export default function RegisterUser({ onBack }) {
   const currentUser = getCurrentUser();
   const viewerRole = (currentUser?.role || "").toLowerCase();
   const isAdminViewer = viewerRole === "admin";
-
   const { departments } = useSelector((state) => state.departments);
   const {
     formData,
@@ -157,7 +153,6 @@ export default function RegisterUser({ onBack }) {
     deptDropdownOpen,
     deptSearch,
   } = useSelector((state) => state.userRegistration);
-
   const {
     type,
     first,
@@ -177,7 +172,6 @@ export default function RegisterUser({ onBack }) {
 
   useEffect(() => {
     if (!deptDropdownOpen) return;
-
     const onDown = (e) => {
       if (!deptBoxRef.current) return;
       if (!deptBoxRef.current.contains(e.target)) {
@@ -188,7 +182,6 @@ export default function RegisterUser({ onBack }) {
     const onKey = (e) => {
       if (e.key === "Escape") dispatch(setDeptDropdownOpen(false));
     };
-
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -211,7 +204,6 @@ export default function RegisterUser({ onBack }) {
     if (type === "superadmin") {
       dispatch(updateField({ field: "empId", value: "" }));
     }
-
     if (type === "user") {
       dispatch(updateField({ field: "email", value: "" }));
     }

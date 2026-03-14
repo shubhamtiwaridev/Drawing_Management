@@ -31,14 +31,17 @@ export const logActivity = async ({
   resourceType,
   resourceId,
   metadata = {},
+  accessFrom,
 }) => {
   try {
     if (!userId || !action || !resourceType || !resourceId) return;
 
     const normAction = normalizeEnumAction(action);
     const normType = normalizeResourceType(resourceType);
+
     if (!mongoose.Types.ObjectId.isValid(String(userId))) return;
     if (!mongoose.Types.ObjectId.isValid(String(resourceId))) return;
+
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const resourceObjectId = new mongoose.Types.ObjectId(resourceId);
 
@@ -61,11 +64,25 @@ export const logActivity = async ({
       }
     } catch {}
 
+    const envAccessFrom = process.env.ELECTRON === "true" ? "App" : "Web";
+
+    const finalAccessFrom =
+      String(
+        accessFrom ||
+          metadata?.accessFrom ||
+          metadata?.platform ||
+          envAccessFrom,
+      ).trim() || envAccessFrom;
+
     const event = {
       action: normAction,
       resourceType: normType,
       resourceId: resourceObjectId,
-      metadata: { ...(metadata || {}), ...(actor ? { actor } : {}) },
+      metadata: {
+        ...(metadata || {}),
+        accessFrom: finalAccessFrom,
+        ...(actor ? { actor } : {}),
+      },
       createdAt: new Date(),
     };
 
@@ -110,6 +127,7 @@ const mapActionToKey = (action) => {
 export const getTodayActivityStats = async (_req, res) => {
   try {
     const startOfTodayIST = getStartOfTodayIST_asUTCDate();
+
     const stats = await ActivityLog.aggregate([
       { $unwind: "$events" },
       { $match: { "events.createdAt": { $gte: startOfTodayIST } } },
@@ -128,6 +146,7 @@ export const getTodayActivityStats = async (_req, res) => {
       const key = mapActionToKey(row._id);
       if (key) result[key] += row.count;
     }
+
     return res.json({ success: true, today: result });
   } catch (err) {
     console.error("getTodayActivityStats error:", err);
@@ -152,10 +171,12 @@ export const getOverallActivityStats = async (_req, res) => {
       deleted: 0,
       searched: 0,
     };
+
     for (const row of stats) {
       const key = mapActionToKey(row._id);
       if (key) result[key] += row.count;
     }
+
     return res.json({ success: true, overall: result });
   } catch (err) {
     console.error("getOverallActivityStats error:", err);

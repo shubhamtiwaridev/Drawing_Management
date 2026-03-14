@@ -9,7 +9,6 @@ export default function requireEditor(req, res, next) {
 
   const role = (req.user.role || "").toLowerCase();
 
-
   if (!["admin", "subadmin", "superadmin"].includes(role)) {
     return res.status(403).json({
       success: false,

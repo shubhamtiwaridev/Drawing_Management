@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModels.js";
 import { logActivity } from "../utils/logActivity.js";
-
 import UserActiveSession from "../models/UserActiveSession.js";
 import { applyLoginPolicy } from "../utils/sessionPolicy.js";
 

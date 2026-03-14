@@ -11,7 +11,6 @@ export const getDrawingHistory = async (req, res) => {
     }
 
     const drawingObjectId = new mongoose.Types.ObjectId(drawingId);
-
     const events = await ActivityLog.aggregate([
       { $unwind: "$events" },
       {

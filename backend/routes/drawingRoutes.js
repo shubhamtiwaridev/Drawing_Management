@@ -11,7 +11,6 @@ import {
   getTotalFilesCount,
   getDepartmentFileCounts,
 } from "../controller/drawingController.js";
-
 import requireAuth from "../middleware/requireAuth.js";
 import requireEditor from "../middleware/requireEditor.js";
 import requireAdmin from "../middleware/requireAdmin.js";

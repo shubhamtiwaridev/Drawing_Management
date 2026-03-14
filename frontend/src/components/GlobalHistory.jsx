@@ -96,6 +96,9 @@ const getDrawingOrTarget = (log) => {
   return log?.metadata?.fullDrawingNo || log?.metadata?.query || "—";
 };
 
+const getAccessFrom = (log) =>
+  String(log?.metadata?.accessFrom || "").trim() || "—";
+
 const formatAction = (action) => {
   const a = normalizeAction(action);
 
@@ -158,7 +161,7 @@ const buildExportRows = (data) =>
     Action: formatAction(log.action),
     Department: getDepartmentName(log),
     Drawing: getDrawingOrTarget(log),
-    "File Name": log.metadata?.fileName || "",
+    Access: getAccessFrom(log),
     Time: formatDateTime(log.createdAt),
   }));
 
@@ -272,7 +275,7 @@ export default function GlobalHistory() {
 
           const department = getDepartmentName(log);
           const drawingOrTarget = getDrawingOrTarget(log);
-          const fileName = log.metadata?.fileName || "";
+          const access = getAccessFrom(log);
           const time = formatDateTime(log.createdAt);
 
           const combined = `
@@ -284,7 +287,7 @@ export default function GlobalHistory() {
             ${rawAction}
             ${department}
             ${drawingOrTarget}
-            ${fileName}
+            ${access}
             ${time}
           `.toLowerCase();
 
@@ -331,11 +334,6 @@ export default function GlobalHistory() {
           return val?.toLowerCase().includes(String(searchValue).toLowerCase());
         }
 
-        case "fileName":
-          return log.metadata?.fileName
-            ?.toLowerCase()
-            .includes(String(searchValue).toLowerCase());
-
         case "datetime": {
           if (!searchValue) return true;
 
@@ -347,6 +345,7 @@ export default function GlobalHistory() {
             toTime,
             toMeridiem,
           } = searchValue;
+
           if (!fromDate && !toDate && !fromTime && !toTime) return true;
 
           const logDate = new Date(log.createdAt);
@@ -405,7 +404,6 @@ export default function GlobalHistory() {
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-slate-200 rounded-2xl p-4 bg-white">
         <div className="flex items-center gap-3">
           <img src={logo} alt="Logo" className="h-10" />
@@ -448,7 +446,6 @@ export default function GlobalHistory() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="mt-4 border border-slate-200 rounded-2xl overflow-hidden bg-white">
         <div className="overflow-auto">
           <table className="w-full text-[12px] border-collapse">
@@ -476,7 +473,7 @@ export default function GlobalHistory() {
                   Drawing
                 </th>
                 <th className="border border-slate-200 px-3 py-2 text-left font-extrabold">
-                  File Name
+                  Access
                 </th>
                 <th className="border border-slate-200 px-3 py-2 text-left font-extrabold">
                   Time
@@ -544,11 +541,7 @@ export default function GlobalHistory() {
                     </td>
 
                     <td className="border border-slate-200 px-3 py-2">
-                      {log.metadata?.fileName ||
-                        (normalizeAction(log.action) === "SEARCH"
-                          ? log.metadata?.query
-                          : "") ||
-                        "—"}
+                      {getAccessFrom(log)}
                     </td>
 
                     <td className="border border-slate-200 px-3 py-2">
@@ -583,7 +576,6 @@ export default function GlobalHistory() {
         </div>
       </div>
 
-      {/* Pagination */}
       <div className="mt-4 flex items-center justify-end gap-1 text-[12px] font-bold">
         <button
           type="button"
@@ -618,6 +610,7 @@ export default function GlobalHistory() {
               pages.push(i);
             }
           }
+
           const pageNumbers = Array.from(new Set(pages)).sort((a, b) => a - b);
 
           return pageNumbers.map((p) => (
@@ -663,7 +656,6 @@ export default function GlobalHistory() {
         </button>
       </div>
 
-      {/* Back */}
       <div className="mt-6 flex justify-end">
         <button
           type="button"

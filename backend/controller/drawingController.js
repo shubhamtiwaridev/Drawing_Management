@@ -1,7 +1,7 @@
-import Drawing from "../models/drawingModel.js";
-import { logActivity } from "./activityLogController.js";
 import fs from "fs";
 import path from "path";
+import Drawing from "../models/drawingModel.js";
+import { logActivity } from "./activityLogController.js";
 import {
   slugifyFolderName,
   toStoredFilePath,
@@ -266,7 +266,8 @@ export const openFile = async (req, res) => {
 
     const canOpen =
       req.user?.role !== "user" ||
-      (drawing.active && allowedDepartments.includes(String(drawing.folderName)));
+      (drawing.active &&
+        allowedDepartments.includes(String(drawing.folderName)));
 
     if (!canOpen) {
       return res.status(403).send("Access denied");
