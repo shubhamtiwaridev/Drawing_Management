@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import Drawing from "../models/drawingModel.js";
 import { logActivity } from "./activityLogController.js";
 import {
@@ -42,6 +43,71 @@ const normalizeToArray = (value) =>
   Array.isArray(value) ? value : value ? [value] : [];
 
 const getExtension = (name = "") => name.split(".").pop().toLowerCase();
+
+const flattenDrawingFiles = (files) => {
+  if (!files) return [];
+
+  if (files instanceof Map) {
+    return Array.from(files.values()).flat().filter(Boolean);
+  }
+
+  if (typeof files?.toObject === "function") {
+    return Object.values(files.toObject()).flat().filter(Boolean);
+  }
+
+  if (typeof files === "object") {
+    return Object.values(files).flat().filter(Boolean);
+  }
+
+  return [];
+};
+
+const normalizeKey = (value) => {
+  if (value === undefined || value === null) return "";
+  return String(value).trim();
+};
+
+const normalizeFileForClient = (file) => {
+  const plain =
+    typeof file?.toObject === "function" ? file.toObject() : { ...file };
+
+  const _id = normalizeKey(plain?._id);
+  const id = normalizeKey(plain?.id);
+  const fileId = normalizeKey(plain?.fileId);
+
+  return {
+    ...plain,
+    _id: _id || undefined,
+    id: id || undefined,
+    fileId: fileId || undefined,
+    fileKey: fileId || _id || id || "",
+  };
+};
+
+const serializeDrawing = (drawing) => {
+  const plain =
+    typeof drawing?.toObject === "function"
+      ? drawing.toObject({ flattenMaps: true })
+      : drawing;
+
+  const files = {};
+  for (const [bucket, arr] of Object.entries(plain?.files || {})) {
+    files[bucket] = (Array.isArray(arr) ? arr : []).map(normalizeFileForClient);
+  }
+
+  return {
+    ...plain,
+    _id: normalizeKey(plain?._id) || undefined,
+    id: normalizeKey(plain?.id) || undefined,
+    files,
+  };
+};
+
+const renameExistingFile = (oldName = "", newFullDrawingNo = "") => {
+  const ext = path.extname(oldName);
+  if (!ext) return oldName;
+  return `${newFullDrawingNo}${ext}`;
+};
 
 export const getDrawings = async (req, res) => {
   try {
@@ -86,7 +152,7 @@ export const getDrawings = async (req, res) => {
 
     res.json({
       success: true,
-      data: items,
+      data: items.map(serializeDrawing),
       total,
       page: pageNum,
       pages: Math.ceil(total / limitNum),
@@ -117,7 +183,7 @@ export const getDrawingById = async (req, res) => {
       });
     }
 
-    res.json({ success: true, data: drawing });
+    res.json({ success: true, data: serializeDrawing(drawing) });
   } catch (error) {
     console.error("getDrawingById error:", error);
     res.status(500).json({
@@ -194,26 +260,28 @@ export const searchDrawingsForUser = async (req, res) => {
     }
 
     const results = [];
-    if (exactDrawing.files instanceof Map) {
-      for (const fileArray of exactDrawing.files.values()) {
-        for (const file of fileArray || []) {
-          if (
-            requestedFileNameLower &&
-            String(file.fileName || "").toLowerCase() !== requestedFileNameLower
-          ) {
-            continue;
-          }
+    const allFiles = flattenDrawingFiles(exactDrawing.files);
 
-          results.push({
-            drawingId: exactDrawing._id,
-            fileName: file.fileName,
-            filePath: file.filePath,
-            remark: file.remark || "",
-            drawingNo: exactDrawing.fullDrawingNo,
-            department: exactDrawing.folderName,
-          });
-        }
+    for (const file of allFiles) {
+      if (
+        requestedFileNameLower &&
+        String(file.fileName || "").toLowerCase() !== requestedFileNameLower
+      ) {
+        continue;
       }
+
+      const normalized = normalizeFileForClient(file);
+
+      results.push({
+        drawingId: String(exactDrawing._id),
+        fileId: normalized.fileId,
+        fileKey: normalized.fileKey,
+        fileName: normalized.fileName,
+        filePath: normalized.filePath,
+        remark: normalized.remark || "",
+        drawingNo: exactDrawing.fullDrawingNo,
+        department: exactDrawing.folderName,
+      });
     }
 
     const status = results.length > 0 ? "SUCCESS" : "NOT_FOUND";
@@ -241,16 +309,11 @@ export const searchDrawingsForUser = async (req, res) => {
 
 export const openFile = async (req, res) => {
   try {
-    const { drawingId, fileName } = req.params;
-    const { path: requestedPathRaw, download } = req.query;
+    const { drawingId, fileKey } = req.params;
+    const { download } = req.query;
 
-    const requestedFileName = fileName ? decodeURIComponent(fileName) : null;
-    const requestedPath = requestedPathRaw
-      ? decodeURIComponent(requestedPathRaw)
-      : null;
-
-    if (!requestedFileName && !requestedPath) {
-      return res.status(400).send("File path missing");
+    if (!drawingId || !fileKey) {
+      return res.status(400).send("File key missing");
     }
 
     const drawing = await Drawing.findById(drawingId);
@@ -273,35 +336,35 @@ export const openFile = async (req, res) => {
       return res.status(403).send("Access denied");
     }
 
-    let foundFile = null;
+    const allFiles = flattenDrawingFiles(drawing.files);
+    const requestedKey = normalizeKey(fileKey);
 
-    if (drawing.files instanceof Map) {
-      if (requestedPath) {
-        for (const fileArray of drawing.files.values()) {
-          const match = (fileArray || []).find(
-            (f) => f.filePath === requestedPath,
-          );
-          if (match) {
-            foundFile = match;
-            break;
-          }
-        }
-      }
+    const foundFile =
+      allFiles.find((f) => {
+        const keys = [
+          normalizeKey(f?.fileKey),
+          normalizeKey(f?.fileId),
+          normalizeKey(f?._id),
+          normalizeKey(f?.id),
+        ].filter(Boolean);
 
-      if (!foundFile && requestedFileName) {
-        for (const fileArray of drawing.files.values()) {
-          const match = (fileArray || []).find(
-            (f) => f.fileName === requestedFileName,
-          );
-          if (match) {
-            foundFile = match;
-            break;
-          }
-        }
-      }
-    }
+        return requestedKey && keys.includes(requestedKey);
+      }) || null;
 
     if (!foundFile) {
+      console.warn("OPEN FILE NOT LINKED", {
+        drawingId: drawing._id.toString(),
+        userId: req.user?.id,
+        requestedKey,
+        availableKeys: allFiles.map((f) => ({
+          fileKey: normalizeKey(f?.fileKey) || null,
+          fileId: normalizeKey(f?.fileId) || null,
+          _id: normalizeKey(f?._id) || null,
+          id: normalizeKey(f?.id) || null,
+          fileName: f?.fileName || null,
+        })),
+      });
+
       return res.status(404).send("File not linked to drawing");
     }
 
@@ -311,6 +374,7 @@ export const openFile = async (req, res) => {
       console.warn("OPEN FILE MISSING", {
         drawingId: drawing._id.toString(),
         userId: req.user?.id,
+        fileKey: requestedKey,
         storedPath: foundFile.filePath,
         resolvedPath: absPath,
       });
@@ -326,6 +390,11 @@ export const openFile = async (req, res) => {
         folderName: drawing.folderName,
         fullDrawingNo: drawing.fullDrawingNo,
         fileName: foundFile.fileName,
+        fileKey:
+          foundFile.fileKey ||
+          foundFile.fileId ||
+          foundFile._id ||
+          foundFile.id,
       },
     });
 
@@ -334,9 +403,14 @@ export const openFile = async (req, res) => {
       path.extname(foundFile.filePath || "")
     ).toLowerCase();
 
-    const downloadName = `${drawing.fullDrawingNo}${extWithDot}`;
+    const downloadName =
+      foundFile.fileName || `${drawing.fullDrawingNo}${extWithDot}`;
     const forceDownload = String(download || "") === "1";
     const canOpenInlineInBrowser = BROWSER_INLINE_EXTENSIONS.has(extWithDot);
+
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
 
     if (forceDownload || !canOpenInlineInBrowser) {
       return res.download(absPath, downloadName);
@@ -404,6 +478,7 @@ export const createDrawing = async (req, res) => {
       const storedName = `${fullDrawingNo}${extWithDot}`;
 
       fileBuckets[key].push({
+        fileId: crypto.randomUUID(),
         fileName: storedName,
         filePath: toStoredFilePath(folderSlug, file.filename),
         remark: Array.isArray(remarks) ? remarks[index] || "" : "",
@@ -439,7 +514,7 @@ export const createDrawing = async (req, res) => {
       },
     });
 
-    res.status(201).json({ success: true, data: drawing });
+    res.status(201).json({ success: true, data: serializeDrawing(drawing) });
   } catch (error) {
     console.error("createDrawing error:", error);
     res.status(500).json({
@@ -463,7 +538,6 @@ export const updateDrawing = async (req, res) => {
 
     const folderName = req.body.folderName || drawing.folderName;
     const folderSlug = slugifyFolderName(folderName);
-
     const effectiveFullDrawingNo =
       req.body.fullDrawingNo || drawing.fullDrawingNo;
 
@@ -485,6 +559,7 @@ export const updateDrawing = async (req, res) => {
       const storedName = `${effectiveFullDrawingNo}${extWithDot}`;
 
       fileBuckets[key].push({
+        fileId: crypto.randomUUID(),
         fileName: storedName,
         filePath: toStoredFilePath(folderSlug, file.filename),
         remark: remarks[index] || "",
@@ -507,9 +582,7 @@ export const updateDrawing = async (req, res) => {
           : [];
 
         arr.forEach((f) => {
-          const ext = path.extname(f?.fileName || f?.filePath || "");
-          if (!ext) return;
-          f.fileName = `${newFull}${ext}`;
+          f.fileName = renameExistingFile(f?.fileName || "", newFull);
         });
       });
     }
@@ -529,8 +602,9 @@ export const updateDrawing = async (req, res) => {
     if (req.body.shortcut) update.shortcut = req.body.shortcut;
     if (req.body.drawingNo) update.drawingNo = req.body.drawingNo;
     if (req.body.revisionNo) update.revisionNo = req.body.revisionNo;
-    if (req.body.description !== undefined)
+    if (req.body.description !== undefined) {
       update.description = req.body.description;
+    }
     if (req.body.fullDrawingNo) update.fullDrawingNo = req.body.fullDrawingNo;
 
     const updated = await Drawing.findByIdAndUpdate(
@@ -551,7 +625,7 @@ export const updateDrawing = async (req, res) => {
       },
     });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: serializeDrawing(updated) });
   } catch (error) {
     console.error("updateDrawing error:", error);
     res.status(500).json({
@@ -570,13 +644,11 @@ export const getUploadsTodayCount = async (_req, res) => {
     let count = 0;
 
     for (const drawing of drawings) {
-      if (!(drawing.files instanceof Map)) continue;
+      const allFiles = flattenDrawingFiles(drawing.files);
 
-      for (const fileArray of drawing.files.values()) {
-        for (const file of fileArray) {
-          if (file.uploadedAt && new Date(file.uploadedAt) >= todayStart) {
-            count++;
-          }
+      for (const file of allFiles) {
+        if (file.uploadedAt && new Date(file.uploadedAt) >= todayStart) {
+          count++;
         }
       }
     }
@@ -599,15 +671,8 @@ export const getTotalFilesCount = async (_req, res) => {
     const drawings = await Drawing.find({}, { files: 1 });
 
     let totalFiles = 0;
-
     for (const d of drawings) {
-      if (!(d.files instanceof Map)) continue;
-
-      for (const fileArray of d.files.values()) {
-        if (Array.isArray(fileArray)) {
-          totalFiles += fileArray.length;
-        }
-      }
+      totalFiles += flattenDrawingFiles(d.files).length;
     }
 
     res.json({
@@ -634,14 +699,7 @@ export const getDepartmentFileCounts = async (_req, res) => {
       if (!dept) continue;
 
       if (!result[dept]) result[dept] = 0;
-
-      if (!(drawing.files instanceof Map)) continue;
-
-      for (const fileArray of drawing.files.values()) {
-        if (Array.isArray(fileArray)) {
-          result[dept] += fileArray.length;
-        }
-      }
+      result[dept] += flattenDrawingFiles(drawing.files).length;
     }
 
     res.json({
@@ -681,7 +739,7 @@ export const toggleDrawingActive = async (req, res) => {
       },
     });
 
-    res.json({ success: true, data: drawing });
+    res.json({ success: true, data: serializeDrawing(drawing) });
   } catch (error) {
     console.error("toggleDrawingActive error:", error);
     res.status(500).json({

@@ -1,5 +1,6 @@
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import { ensureDepartmentDir, safeName } from "../utils/fileStorage.js";
 
 const ALLOWED_EXTENSIONS = new Set([
@@ -32,7 +33,17 @@ const storage = multer.diskStorage({
     try {
       const ext = path.extname(file.originalname).toLowerCase();
       const fullDrawingNo = safeName(req.body.fullDrawingNo || "DRAWING");
-      cb(null, `${fullDrawingNo}${ext}`);
+      const folderName = req.body.folderName || "general";
+      const { dirPath } = ensureDepartmentDir(folderName);
+
+      const shortName = `${fullDrawingNo}${ext}`;
+      const fullPath = path.join(dirPath, shortName);
+
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+
+      cb(null, shortName);
     } catch (error) {
       cb(error);
     }

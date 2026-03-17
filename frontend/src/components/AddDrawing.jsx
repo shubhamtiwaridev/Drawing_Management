@@ -38,7 +38,11 @@ import {
   toggleDrawingActive,
 } from "../store/drawingSlice";
 
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "";
 
 function slugFromName(name = "") {
   return name.toString().toLowerCase().trim().replace(/\s+/g, "_");
@@ -812,31 +816,52 @@ export default function DrawingManager({
                               {Array.isArray(filesArr) &&
                               filesArr.length > 0 ? (
                                 <div className="flex flex-col gap-2 max-w-44">
-                                  {filesArr.map((f, idx2) => (
-                                    <div
-                                      key={`${cellKey}-${idx2}`}
-                                      className="flex flex-col items-center"
-                                    >
-                                      <a
-                                        href={`${API_BASE}/api/file/open/${r._id}/${encodeURIComponent(
-                                          f.fileName,
-                                        )}?path=${encodeURIComponent(f.filePath)}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-700 font-semibold transition truncate max-w-44"
-                                        style={{ textDecoration: "none" }}
-                                        title={f.fileName}
-                                      >
-                                        {f.fileName}
-                                      </a>
+                                  {filesArr.map((f, idx2) => {
+                                   const fileKey = f?.fileKey || f?.fileId || f?._id || f?.id;
+                                    const drawingId = r?._id || r?.id;
 
-                                      {f.remark && (
-                                        <span className="text-[10px] font-semibold text-slate-400 text-center">
-                                          {f.remark}
-                                        </span>
-                                      )}
-                                    </div>
-                                  ))}
+                                    return (
+                                      <div
+                                        key={`${cellKey}-${idx2}`}
+                                        className="flex flex-col items-center"
+                                      >
+                                        <a
+                                          href={
+                                            drawingId && fileKey
+                                              ? `${API_BASE}/api/file/open/${encodeURIComponent(drawingId)}/${encodeURIComponent(fileKey)}`
+                                              : "#"
+                                          }
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:text-blue-700 font-semibold transition truncate max-w-44"
+                                          style={{ textDecoration: "none" }}
+                                          title={f?.fileName || "Open file"}
+                                          onClick={(e) => {
+                                            if (!drawingId || !fileKey) {
+                                              e.preventDefault();
+                                              console.error(
+                                                "Missing drawingId or fileKey",
+                                                {
+                                                  drawingId,
+                                                  fileKey,
+                                                  file: f,
+                                                  row: r,
+                                                },
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          {f?.fileName || "Unnamed file"}
+                                        </a>
+
+                                        {f?.remark && (
+                                          <span className="text-[10px] font-semibold text-slate-400 text-center">
+                                            {f.remark}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               ) : (
                                 <div className="flex items-center justify-center py-2">
