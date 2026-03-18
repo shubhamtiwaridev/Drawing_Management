@@ -115,7 +115,29 @@ export const getDrawings = async (req, res) => {
     const role = req.user?.role || "user";
 
     const query = {};
-    if (role === "user") query.active = true;
+
+    const allowedDepartments = Array.isArray(req.user?.departments)
+      ? req.user.departments.map(String)
+      : req.user?.department
+        ? [String(req.user.department)]
+        : [];
+
+    if (role === "user") {
+      query.active = true;
+
+      if (!allowedDepartments.length) {
+        return res.json({
+          success: true,
+          data: [],
+          total: 0,
+          page: Math.max(1, Number(page)),
+          pages: 0,
+        });
+      }
+
+      query.folderName = { $in: allowedDepartments };
+    }
+
     if (folderSlug) query.folderSlug = folderSlug.toLowerCase();
 
     if (search) {
@@ -176,7 +198,17 @@ export const getDrawingById = async (req, res) => {
       });
     }
 
-    if (req.user?.role === "user" && !drawing.active) {
+    const allowedDepartments = Array.isArray(req.user?.departments)
+      ? req.user.departments.map(String)
+      : req.user?.department
+        ? [String(req.user.department)]
+        : [];
+
+    if (
+      req.user?.role === "user" &&
+      (!drawing.active ||
+        !allowedDepartments.includes(String(drawing.folderName)))
+    ) {
       return res.status(403).json({
         success: false,
         message: "Access denied",
@@ -199,6 +231,7 @@ export const searchDrawingsForUser = async (req, res) => {
     if (!q) return res.json([]);
 
     const user = req.user;
+    const role = (user?.role || "user").toLowerCase();
 
     const allowedDepartments = Array.isArray(user?.departments)
       ? user.departments.map(String)
@@ -215,10 +248,17 @@ export const searchDrawingsForUser = async (req, res) => {
       ? q.toUpperCase().slice(0, dotIdx)
       : q.toUpperCase();
 
-    const exactDrawing = await Drawing.findOne({
+    const drawingQuery = {
       fullDrawingNo: baseNoUpper,
-      active: true,
-    }).select("_id folderName fullDrawingNo files");
+    };
+
+    if (role === "user") {
+      drawingQuery.active = true;
+    }
+
+    const exactDrawing = await Drawing.findOne(drawingQuery).select(
+      "_id folderName fullDrawingNo files active",
+    );
 
     if (!exactDrawing) {
       await logActivity({
@@ -238,10 +278,12 @@ export const searchDrawingsForUser = async (req, res) => {
       return res.json([]);
     }
 
-    if (
-      !allowedDepartments.length ||
-      !allowedDepartments.includes(exactDrawing.folderName)
-    ) {
+    const canAccess =
+      role !== "user" ||
+      (allowedDepartments.length &&
+        allowedDepartments.includes(String(exactDrawing.folderName)));
+
+    if (!canAccess) {
       await logActivity({
         userId: user.id,
         action: "SEARCH",
@@ -310,10 +352,10 @@ export const searchDrawingsForUser = async (req, res) => {
 export const openFile = async (req, res) => {
   try {
     const { drawingId, fileKey } = req.params;
-    const { download } = req.query;
+    const { download, path: filePath } = req.query;
 
-    if (!drawingId || !fileKey) {
-      return res.status(400).send("File key missing");
+    if (!drawingId) {
+      return res.status(400).send("Drawing id missing");
     }
 
     const drawing = await Drawing.findById(drawingId);
@@ -338,29 +380,38 @@ export const openFile = async (req, res) => {
 
     const allFiles = flattenDrawingFiles(drawing.files);
     const requestedKey = normalizeKey(fileKey);
+    const requestedPath = normalizeKey(filePath);
 
     const foundFile =
-      allFiles.find((f) => {
-        const keys = [
-          normalizeKey(f?.fileKey),
-          normalizeKey(f?.fileId),
-          normalizeKey(f?._id),
-          normalizeKey(f?.id),
-        ].filter(Boolean);
+      (requestedKey
+        ? allFiles.find((f) => {
+            const keys = [
+              normalizeKey(f?.fileKey),
+              normalizeKey(f?.fileId),
+              normalizeKey(f?._id),
+              normalizeKey(f?.id),
+            ].filter(Boolean);
 
-        return requestedKey && keys.includes(requestedKey);
-      }) || null;
+            return keys.includes(requestedKey);
+          })
+        : null) ||
+      (requestedPath
+        ? allFiles.find((f) => normalizeKey(f?.filePath) === requestedPath)
+        : null) ||
+      null;
 
     if (!foundFile) {
       console.warn("OPEN FILE NOT LINKED", {
         drawingId: drawing._id.toString(),
         userId: req.user?.id,
         requestedKey,
+        requestedPath,
         availableKeys: allFiles.map((f) => ({
           fileKey: normalizeKey(f?.fileKey) || null,
           fileId: normalizeKey(f?.fileId) || null,
           _id: normalizeKey(f?._id) || null,
           id: normalizeKey(f?.id) || null,
+          filePath: normalizeKey(f?.filePath) || null,
           fileName: f?.fileName || null,
         })),
       });

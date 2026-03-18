@@ -49,7 +49,17 @@ export default async function auth(req, res, next) {
       role: user.role || "user",
       firstName: user.firstName,
       lastName: user.lastName,
-      departments: Array.isArray(user.departments) ? user.departments : [],
+      departments:
+        Array.isArray(user.departments) && user.departments.length > 0
+          ? user.departments.map(String)
+          : user.department
+            ? [String(user.department)]
+            : [],
+      department: user.department
+        ? String(user.department)
+        : Array.isArray(user.departments) && user.departments.length > 0
+          ? String(user.departments[0])
+          : "",
       employeeId: user.employeeId,
       mobile: user.mobile,
     };

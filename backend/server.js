@@ -28,11 +28,15 @@ const defaultEnvPath = fs.existsSync(path.resolve(__dirname, ".env"))
   : path.resolve(__dirname, "..", ".env");
 
 dotenv.config({
-  path: process.env.ENV_PATH ? path.resolve(process.env.ENV_PATH) : defaultEnvPath,
+  path: process.env.ENV_PATH
+    ? path.resolve(process.env.ENV_PATH)
+    : defaultEnvPath,
 });
 
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
-const HOST = process.env.HOST || (process.env.ELECTRON === "true" ? "127.0.0.1" : "0.0.0.0");
+const HOST =
+  process.env.HOST ||
+  (process.env.ELECTRON === "true" ? "127.0.0.1" : "0.0.0.0");
 
 const defaultAllowedOrigins = [
   "http://localhost:5173",
@@ -49,10 +53,14 @@ const extraAllowedOrigins = (process.env.CORS_ORIGINS || "")
   .map((value) => value.trim())
   .filter(Boolean);
 
-const allowedOrigins = new Set([...defaultAllowedOrigins, ...extraAllowedOrigins]);
+const allowedOrigins = new Set([
+  ...defaultAllowedOrigins,
+  ...extraAllowedOrigins,
+]);
 
 const shouldServeFrontend =
-  process.env.SERVE_FRONTEND === "true" || process.env.NODE_ENV === "production";
+  process.env.SERVE_FRONTEND === "true" ||
+  process.env.NODE_ENV === "production";
 
 const frontendDist = process.env.FRONTEND_DIST
   ? path.resolve(process.env.FRONTEND_DIST)
@@ -74,7 +82,10 @@ app.use(
       if (!origin) return cb(null, true);
       if (allowedOrigins.has(origin)) return cb(null, true);
 
-      if (process.env.ELECTRON === "true" && (origin === "null" || origin.startsWith("file://"))) {
+      if (
+        process.env.ELECTRON === "true" &&
+        (origin === "null" || origin.startsWith("file://"))
+      ) {
         return cb(null, true);
       }
 
@@ -103,16 +114,15 @@ app.use("/api/file", fileRoutes);
 app.use("/api/sessions", sessionsRoutes);
 app.use("/api/session-schedules", sessionSchedulesRoutes);
 
+app.get("/api/health", (_req, res) => {
+  res.json({ success: true, message: "API running" });
+});
+
 if (shouldServeFrontend) {
   app.use(express.static(frontendDist));
 
-  app.get("/{*splat}", (req, res, next) => {
-    if (req.path.startsWith("/api")) return next();
+  app.get(/^\/(?!api(?:\/|$)).*/, (_req, res) => {
     return res.sendFile(frontendIndex);
-  });
-} else {
-  app.get("/", (_req, res) => {
-    res.json({ success: true, message: "API running" });
   });
 }
 
@@ -126,7 +136,9 @@ app.use((err, req, res, _next) => {
   }
 
   console.error("Unhandled server error:", err);
-  return res.status(500).json({ success: false, message: "Internal server error" });
+  return res
+    .status(500)
+    .json({ success: false, message: "Internal server error" });
 });
 
 let serverInstance = null;
@@ -200,7 +212,8 @@ export async function stopServer() {
   }
 }
 
-const startedDirectly = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+const startedDirectly =
+  process.argv[1] && path.resolve(process.argv[1]) === __filename;
 
 if (startedDirectly) {
   startServer().catch((error) => {

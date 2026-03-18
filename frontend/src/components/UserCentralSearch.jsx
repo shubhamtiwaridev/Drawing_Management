@@ -4,7 +4,11 @@ import logo from "./logos/image.png";
 import { FaSearch } from "react-icons/fa";
 
 const PISTACHIO = "#93C572";
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "";
 
 const CARD =
   "rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 " +
@@ -51,7 +55,7 @@ export default function UserCentralSearch() {
   const user = getCurrentUser();
   const role = (user?.role || "user").toLowerCase();
 
-  if (role !== "user") return null;
+  if (!role) return null;
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -177,9 +181,13 @@ export default function UserCentralSearch() {
             <div className="space-y-3">
               {!loading &&
                 results.map((file) => {
-                  const href = `${API_BASE}/api/file/open/${file.drawingId}?path=${encodeURIComponent(
-                    file.filePath || "",
-                  )}`;
+                  const fileKey =
+                    file?.fileKey || file?.fileId || file?._id || file?.id;
+
+                  const href =
+                    file.drawingId && fileKey
+                      ? `${API_BASE}/api/file/open/${encodeURIComponent(file.drawingId)}/${encodeURIComponent(fileKey)}`
+                      : `${API_BASE}/api/file/open/${encodeURIComponent(file.drawingId)}?path=${encodeURIComponent(file.filePath || "")}`;
 
                   return (
                     <div
