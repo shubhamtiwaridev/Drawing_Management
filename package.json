@@ -2,7 +2,7 @@
   "name": "drawing-management",
   "version": "1.0.0",
   "private": true,
-  "description": "Electron installer build for the Drawing Management desktop app",
+  "description": "Drawing Management system",
   "main": "electron/main.cjs",
   "scripts": {
     "install:all": "npm --prefix backend install && npm --prefix frontend install",
