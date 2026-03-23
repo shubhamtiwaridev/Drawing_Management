@@ -1,4 +1,4 @@
-// backend/routes/usersRoutes.js (or similar)
+
 import express from "express";
 import requireAuth from "../middleware/requireAuth.js";
 import requireAdmin from "../middleware/requireAdmin.js";
